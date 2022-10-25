@@ -62,13 +62,15 @@ namespace ReversiRestApi.Controllers
         }
 
         [HttpPut("/api/spel/zet")]
-        public ActionResult<string> SpelDoeZet([FromForm] string spelToken)
+        public ActionResult<string> SpelDoeZet([FromBody] string spelToken, [FromBody] string spelerToken, 
+            [FromBody] int rijzet, [FromBody] int kolomzet)
         {
             var spel = iRepository.GetSpel(spelToken);
 
             if (spel == null) return NotFound();
-            var beurt = spel.AandeBeurt;
-            return Ok(beurt);
+            spel.DoeZet(rijzet, kolomzet);
+
+            return Ok();
         }
 
 

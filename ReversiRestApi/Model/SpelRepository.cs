@@ -42,6 +42,12 @@ namespace ReversiRestApi.Model
             return Spellen.Find(s => s.Speler1Token == id || s.Speler2Token == id);
         }
 
+        public void DoeZet(Spel spel)
+        {
+            var foundspel = Spellen.Find(s => s.Token == spel.Token);
+            foundspel = spel;
+        }
+
         public void Delete(Spel spel)
         {
             Spellen.Remove(spel);
