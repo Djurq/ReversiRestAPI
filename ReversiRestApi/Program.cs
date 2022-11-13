@@ -15,12 +15,6 @@ namespace ReversiRestApi
     {
         public static void Main(string[] args)
         {
-            
-            
-            
-            var serviceProvider = new ServiceCollection()
-                .AddSingleton<ISpelRepository, SpelRepository>()
-                .BuildServiceProvider();
             CreateHostBuilder(args).Build().Run();
         }
 

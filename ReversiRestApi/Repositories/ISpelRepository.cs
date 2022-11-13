@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using ReversiRestApi.Model;
 
-namespace ReversiRestApi.Model
+namespace ReversiRestApi.Repositories
 {
     public interface ISpelRepository
     {
@@ -10,6 +11,7 @@ namespace ReversiRestApi.Model
         public List<Spel> GetSpellen();
         Spel GetSpel(string spelToken);
 
-        Spel GetSpelWithSpelerToken(string spelerToken);
+        void Delete(Spel spel);
+        void Save();
     }
 }

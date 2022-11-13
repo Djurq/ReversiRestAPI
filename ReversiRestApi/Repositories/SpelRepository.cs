@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using ReversiRestApi.Model;
 
-namespace ReversiRestApi.Model
+namespace ReversiRestApi.Repositories
 {
     public class SpelRepository : ISpelRepository
     {
-        public List<Spel> Spellen { get; set; }
+        private List<Spel> Spellen { get; set; }
         
         public SpelRepository()
         {
@@ -45,7 +46,7 @@ namespace ReversiRestApi.Model
         public void DoeZet(Spel spel)
         {
             var foundspel = Spellen.Find(s => s.Token == spel.Token);
-            foundspel = spel;
+            if (foundspel != null) foundspel.Bord = spel.Bord;
         }
 
         public void Delete(Spel spel)

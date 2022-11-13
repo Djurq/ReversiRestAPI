@@ -11,6 +11,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ReversiRestApi.Model;
+using ReversiRestApi.DAL;
+using Microsoft.EntityFrameworkCore;
+using ReversiRestApi.Repositories;
 
 namespace ReversiRestApi
 {
@@ -26,8 +29,9 @@ namespace ReversiRestApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<ReversiContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Reversi")));
+            services.AddTransient<ISpelRepository, SpelAccesLayer>();
             services.AddControllers();
-            services.AddSingleton<ISpelRepository, SpelRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
