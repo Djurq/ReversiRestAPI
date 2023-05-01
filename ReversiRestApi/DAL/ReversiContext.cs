@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ReversiRestApi.Model;
 
 namespace ReversiRestApi.DAL
 {
