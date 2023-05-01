@@ -1,13 +1,15 @@
 ﻿using System;
-using ReversieISpelImplementatie.Model;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
 
-namespace ReversiRestApi
+namespace ReversiRestApi.Model
 {
     public class Spel : ISpel
     {
-        private const int bordOmvang = 8;
+        private const int BordOmvang = 8;
 
-        private readonly int[,] richting = new int[8, 2]
+        private readonly int[,] _richting = new int[8, 2]
         {
             {0, 1}, // naar rechts
             {0, -1}, // naar links
@@ -19,19 +21,90 @@ namespace ReversiRestApi
             {-1, -1}
         }; // naar linksboven
 
+        [Key]
         public int ID { get; set; }
         public string Omschrijving { get; set; }
         public string Token { get; set; }
         public string Speler1Token { get; set; }
         public string Speler2Token { get; set; }
 
-        private Kleur[,] bord;
+        [NotMapped]
+        private Kleur[,] _bord;
 
+        [NotMapped]
+        [JsonConverter(typeof(SpelBordConverter))]
         public Kleur[,] Bord
-        {
-            get { return bord; }
-            set { bord = value; }
+        { get => _bord; set => BordAsString = _convert(value); }
+
+        [JsonIgnore]
+        private string BordAsString {
+            get => _convert(_bord);
+
+            set => _bord = _convert(value);
         }
+
+        private static string _convert(Kleur[,] bord) {
+            
+            string bordString = "";
+
+            for (int rij = 0; rij < BordOmvang; rij++) {
+                for (int kolom = 0; kolom < BordOmvang; kolom++) {
+
+                    Kleur kleur = bord[kolom, rij];
+                    int intKleur;
+                    switch (kleur) {
+                        default:
+                        case Kleur.Geen:
+                            intKleur = 0;
+                            break;
+                        case Kleur.Wit:
+                            intKleur = 1;
+                            break;
+                        case Kleur.Zwart:
+                            intKleur = 2;
+                            break;
+                    }
+
+                    bordString += intKleur;
+                }
+
+                bordString += ":";
+            }
+            return bordString;
+        }
+
+        private static Kleur[,] _convert(string bordString) {
+            Kleur[,] bord = new Kleur[BordOmvang, BordOmvang];
+
+            int rij = 0;
+            foreach (string line in bordString.Split(":")) {
+                int kolom = 0;
+                foreach (char c in line.ToCharArray()) {
+                    Kleur kleur;
+                    
+                    switch (c) {
+                        default:
+                        case '0':
+                            kleur = Kleur.Geen;
+                            break;
+                        case '1':
+                            kleur = Kleur.Wit;
+                            break;
+                        case '2':
+                            kleur = Kleur.Zwart;
+                            break;
+                    }
+
+                    bord[kolom, rij] = kleur;
+                    
+                    rij++;
+                }
+                kolom++;
+            }
+            return bord;
+        }
+
+
 
         public Kleur AandeBeurt { get; set; }
 
@@ -41,7 +114,7 @@ namespace ReversiRestApi
             Token = Token.Replace("/", "q"); // slash mijden ivm het opvragen van een spel via een api obv het token
             Token = Token.Replace("+", "r"); // plus mijden ivm het opvragen van een spel via een api obv het token
 
-            Bord = new Kleur[bordOmvang, bordOmvang];
+            Bord = new Kleur[BordOmvang, BordOmvang];
             Bord[3, 3] = Kleur.Wit;
             Bord[4, 4] = Kleur.Wit;
             Bord[3, 4] = Kleur.Zwart;
@@ -69,18 +142,29 @@ namespace ReversiRestApi
 
             return false;
         }
+        
+        public void Opgeven()
+        {
+            for (int rijZet = 0; rijZet < BordOmvang; rijZet++)
+            {
+                for (int kolomZet = 0; kolomZet < BordOmvang; kolomZet++)
+                {
+                    _bord[rijZet, kolomZet] = GetKleurTegenstander(AandeBeurt);
+                }
+            }
+        }
 
         public Kleur OverwegendeKleur()
         {
             int aantalWit = 0;
             int aantalZwart = 0;
-            for (int rijZet = 0; rijZet < bordOmvang; rijZet++)
+            for (int rijZet = 0; rijZet < BordOmvang; rijZet++)
             {
-                for (int kolomZet = 0; kolomZet < bordOmvang; kolomZet++)
+                for (int kolomZet = 0; kolomZet < BordOmvang; kolomZet++)
                 {
-                    if (bord[rijZet, kolomZet] == Kleur.Wit)
+                    if (_bord[rijZet, kolomZet] == Kleur.Wit)
                         aantalWit++;
-                    else if (bord[rijZet, kolomZet] == Kleur.Zwart)
+                    else if (_bord[rijZet, kolomZet] == Kleur.Zwart)
                         aantalZwart++;
                 }
             }
@@ -112,7 +196,7 @@ namespace ReversiRestApi
                 throw new Exception($"Zet ({rijZet},{kolomZet}) is niet mogelijk!");
             }
 
-            bord[rijZet, kolomZet] = AandeBeurt;
+            _bord[rijZet, kolomZet] = AandeBeurt;
             foreach (var directions in _richtingen)
             {
                 DraaiStenenVanTegenstanderInOpgegevenRichtingOmIndienIngesloten(rijZet, kolomZet, AandeBeurt,
@@ -125,12 +209,12 @@ namespace ReversiRestApi
 
         private static Kleur GetKleurTegenstander(Kleur kleur)
         {
-            if (kleur == Kleur.Wit)
-                return Kleur.Zwart;
-            else if (kleur == Kleur.Zwart)
-                return Kleur.Wit;
-            else
-                return Kleur.Geen;
+            return kleur switch
+            {
+                Kleur.Wit => Kleur.Zwart,
+                Kleur.Zwart => Kleur.Wit,
+                _ => Kleur.Geen
+            };
         }
 
         private bool IsErEenZetMogelijk(Kleur kleur)
@@ -138,9 +222,9 @@ namespace ReversiRestApi
             if (kleur == Kleur.Geen)
                 throw new Exception("Kleur mag niet gelijk aan Geen zijn!");
             // controleeer of er een zet mogelijk is voor kleur
-            for (int rijZet = 0; rijZet < bordOmvang; rijZet++)
+            for (int rijZet = 0; rijZet < BordOmvang; rijZet++)
             {
-                for (int kolomZet = 0; kolomZet < bordOmvang; kolomZet++)
+                for (int kolomZet = 0; kolomZet < BordOmvang; kolomZet++)
                 {
                     if (ZetMogelijk(rijZet, kolomZet, kleur))
                     {
@@ -160,7 +244,7 @@ namespace ReversiRestApi
                 {
                     if (StenenInTeSluitenInOpgegevenRichting(rijZet, kolomZet,
                             kleur,
-                            richting[i, 0], richting[i, 1]))
+                            _richting[i, 0], _richting[i, 1]))
                         return true;
                 }
             }
@@ -178,8 +262,8 @@ namespace ReversiRestApi
 
         private static bool PositieBinnenBordGrenzen(int rij, int kolom)
         {
-            return (rij >= 0 && rij < bordOmvang &&
-                    kolom >= 0 && kolom < bordOmvang);
+            return (rij >= 0 && rij < BordOmvang &&
+                    kolom >= 0 && kolom < BordOmvang);
         }
 
         private bool ZetOpBordEnNogVrij(int rijZet, int kolomZet)
