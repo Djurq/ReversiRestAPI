@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ReversieISpelImplementatie.Model;
 using ReversiRestApi.Model;
 
 namespace ReversiRestApi.Controllers
@@ -43,15 +44,7 @@ namespace ReversiRestApi.Controllers
             return Ok(spel);
         }
 
-        [HttpGet("/api/spelspeler/{spelertoken}")]
-        public ActionResult<Spel> GetSpelWithSpelerToken(string spelertoken)
-        {
-            var spel = iRepository.GetSpelWithSpelerToken(spelertoken);
-            if (spel == null) return NotFound();
-            return Ok(spel);
-        }
-
-        [HttpGet("/api/spel/beurt/")]
+        [HttpGet("/api/spel/beurt")]
         public ActionResult<string> GetSpelBeurt([FromForm] string spelToken)
         {
             var spel = iRepository.GetSpel(spelToken);
@@ -61,13 +54,25 @@ namespace ReversiRestApi.Controllers
             return Ok(beurt);
         }
 
-        [HttpPut("/api/spel/zet")]
-        public ActionResult<string> SpelDoeZet([FromBody] string spelToken, [FromBody] string spelerToken, 
-            [FromBody] int rijzet, [FromBody] int kolomzet)
+        [HttpPut("/api/spel/zet/{id}")]
+        public ActionResult<string> SpelDoeZet(string id, [FromQuery]string spelToken,
+            [FromQuery] int rijzet, [FromQuery] int kolomzet)
         {
-            var spel = iRepository.GetSpel(spelToken);
+            if (spelToken == null)
+            {
+                return Unauthorized();
+            }
 
-            if (spel == null) return NotFound();
+            var spel = iRepository.GetSpel(id);
+            if (spel == null)
+            {
+                return NotFound();
+            }
+
+            if (spel.AandeBeurt == Kleur.Wit)
+            {
+                //TODO
+            }
             spel.DoeZet(rijzet, kolomzet);
 
             return Ok();
